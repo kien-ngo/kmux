@@ -20,7 +20,8 @@ async function checkTmuxInstalled(): Promise<boolean> {
 
 async function getTmuxSessions(): Promise<TmuxSession[]> {
   try {
-    const result = await $`tmux list-sessions -F "#{session_name}|#{session_windows}|#{session_created}|#{session_attached}"`.quiet();
+    const result =
+      await $`tmux list-sessions -F "#{session_name}|#{session_windows}|#{session_created}|#{session_attached}"`.quiet();
     const output = result.text().trim();
 
     if (!output) return [];
@@ -84,7 +85,9 @@ async function selectSession(
   const answer = await select({
     message: `Select a session to ${actionText}:`,
     choices: sessions.map((s) => ({
-      name: `${s.name} (${s.windows} window${s.windows !== 1 ? "s" : ""})${s.attached ? " [attached]" : ""}`,
+      name: `${s.name} (${s.windows} window${s.windows !== 1 ? "s" : ""})${
+        s.attached ? " [attached]" : ""
+      }`,
       value: s.name,
       description: `Created: ${s.created}`,
     })),
@@ -93,16 +96,18 @@ async function selectSession(
   return answer;
 }
 
+const pkgName = "kmux";
+
 function printUsage(): void {
   console.log(`
-kmux - A friendly tmux session navigator
+${pkgName} - A friendly tmux session navigator
 
 Usage:
-  kmux ls         List sessions and select one to attach
-  kmux a          Attach to a session (interactive)
-  kmux c [name]   Create a new session (optional name)
-  kmux k          Kill a session (interactive)
-  kmux help       Show this help message
+  ${pkgName} ls         List sessions and select one to attach
+  ${pkgName} a          Attach to a session (interactive)
+  ${pkgName} c [name]   Create a new session (optional name)
+  ${pkgName} k          Kill a session (interactive)
+  ${pkgName} help       Show this help message
 
 Navigation:
   Use arrow keys to navigate, Enter to select
@@ -113,14 +118,27 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
 
+  // Handle help commands first (no tmux required)
+  if (
+    !command ||
+    command === "help" ||
+    command === "--help" ||
+    command === "-h"
+  ) {
+    printUsage();
+    return;
+  }
+
+  // All other commands require tmux
+  if (!(await checkTmuxInstalled())) {
+    console.error("Error: tmux is not installed. Please install tmux first.");
+    process.exit(1);
+  }
+
   switch (command) {
     case "ls":
     case "a":
     case "attach": {
-      if (!(await checkTmuxInstalled())) {
-        console.error("Error: tmux is not installed. Please install tmux first.");
-        process.exit(1);
-      }
       const sessions = await getTmuxSessions();
       const selected = await selectSession(sessions, "attach");
       if (selected) {
@@ -131,10 +149,6 @@ async function main(): Promise<void> {
 
     case "k":
     case "kill": {
-      if (!(await checkTmuxInstalled())) {
-        console.error("Error: tmux is not installed. Please install tmux first.");
-        process.exit(1);
-      }
       const sessions = await getTmuxSessions();
       const selected = await selectSession(sessions, "kill");
       if (selected) {
@@ -145,10 +159,6 @@ async function main(): Promise<void> {
 
     case "c":
     case "create": {
-      if (!(await checkTmuxInstalled())) {
-        console.error("Error: tmux is not installed. Please install tmux first.");
-        process.exit(1);
-      }
       let sessionName = args[1];
       if (!sessionName) {
         sessionName = await input({
@@ -158,16 +168,6 @@ async function main(): Promise<void> {
       await createSession(sessionName || undefined);
       break;
     }
-
-    case "help":
-    case "--help":
-    case "-h":
-      printUsage();
-      break;
-
-    case undefined:
-      printUsage();
-      break;
 
     default:
       console.error(`Unknown command: ${command}`);
