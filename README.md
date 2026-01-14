@@ -18,7 +18,7 @@ npm install -g kmux
 ### From source
 
 ```bash
-git clone https://github.com/yourusername/kmux.git
+git clone https://github.com/kien-ngo/kmux.git
 cd kmux
 bun install
 bun run build
@@ -28,10 +28,11 @@ npm link
 ## Usage
 
 ```bash
-kmux ls      # List sessions and select one to attach
-kmux a       # Attach to a session (interactive menu)
-kmux k       # Kill a session (interactive menu)
-kmux help    # Show help message
+kmux ls         List sessions and select one to attach
+kmux a          Attach to a session (interactive)
+kmux c [name]   Create a new session (optional name)
+kmux k          Kill a session (interactive)
+kmux help       Show this help message
 ```
 
 Use arrow keys to navigate the menu and Enter to select.
