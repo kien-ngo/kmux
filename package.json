@@ -1,0 +1,35 @@
+{
+  "name": "kmux",
+  "version": "0.0.1",
+  "description": "A better tmux session navigator with interactive menus",
+  "module": "index.ts",
+  "type": "module",
+  "bin": {
+    "kmux": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build ./index.ts --outdir ./dist --target bun --minify",
+    "dev": "bun run index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "tmux",
+    "terminal",
+    "cli",
+    "session",
+    "multiplexer"
+  ],
+  "author": "Kien Ngo",
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
