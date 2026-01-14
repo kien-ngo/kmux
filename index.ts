@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { select } from "@inquirer/prompts";
+import { input, select } from "@inquirer/prompts";
 import { $ } from "bun";
 
 interface TmuxSession {
@@ -57,6 +57,19 @@ async function killSession(sessionName: string): Promise<void> {
   }
 }
 
+async function createSession(sessionName?: string): Promise<void> {
+  const args = ["tmux", "new-session"];
+  if (sessionName) {
+    args.push("-s", sessionName);
+  }
+  const proc = Bun.spawn(args, {
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  await proc.exited;
+}
+
 async function selectSession(
   sessions: TmuxSession[],
   action: "attach" | "kill"
@@ -82,13 +95,14 @@ async function selectSession(
 
 function printUsage(): void {
   console.log(`
-kmux - A better tmux session navigator
+kmux - A friendly tmux session navigator
 
 Usage:
-  kmux ls    List sessions and select one to attach
-  kmux a     Attach to a session (interactive)
-  kmux k     Kill a session (interactive)
-  kmux help  Show this help message
+  kmux ls         List sessions and select one to attach
+  kmux a          Attach to a session (interactive)
+  kmux c [name]   Create a new session (optional name)
+  kmux k          Kill a session (interactive)
+  kmux help       Show this help message
 
 Navigation:
   Use arrow keys to navigate, Enter to select
@@ -126,6 +140,22 @@ async function main(): Promise<void> {
       if (selected) {
         await killSession(selected);
       }
+      break;
+    }
+
+    case "c":
+    case "create": {
+      if (!(await checkTmuxInstalled())) {
+        console.error("Error: tmux is not installed. Please install tmux first.");
+        process.exit(1);
+      }
+      let sessionName = args[1];
+      if (!sessionName) {
+        sessionName = await input({
+          message: "Session name (leave empty for default):",
+        });
+      }
+      await createSession(sessionName || undefined);
       break;
     }
 
