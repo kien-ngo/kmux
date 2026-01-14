@@ -1,6 +1,6 @@
 {
   "name": "kmux",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A better tmux session navigator with interactive menus",
   "module": "index.ts",
   "type": "module",
@@ -8,7 +8,7 @@
     "kmux": "./dist/index.js"
   },
   "scripts": {
-    "build": "bun build ./index.ts --outdir ./dist --target bun --minify",
+    "compile": "bun build ./index.ts --outdir ./dist --target bun --minify",
     "dev": "bun run index.ts"
   },
   "files": [
