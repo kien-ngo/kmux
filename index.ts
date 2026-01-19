@@ -103,13 +103,11 @@ function printUsage(): void {
 ${pkgName} - A friendly tmux session navigator
 
 Usage:
-  ${pkgName} ls            List sessions and select one to attach
-  ${pkgName} a             Attach to a session (interactive)
-  ${pkgName} a [name]      Attach to a specific session by name
-  ${pkgName} attach        Attach to a session (interactive)
-  ${pkgName} attach [name] Attach to a specific session by name
-  ${pkgName} c [name]      Create a new session (optional name)
-  ${pkgName} k             Kill a session (interactive)
+  ${pkgName} ls            [l]ist sessions and select one to attach
+  ${pkgName} a             [a]ttach to a session (interactive)
+  ${pkgName} a [name]      [a]ttach to a specific session by name
+  ${pkgName} c [name]      [c]reate a new session (optional name)
+  ${pkgName} k             [k]ill a session (interactive)
   ${pkgName} help          Show this help message
 
 Navigation:
@@ -148,8 +146,7 @@ async function main(): Promise<void> {
       break;
     }
 
-    case "a":
-    case "attach": {
+    case "a": {
       const sessionName = args[1];
       if (sessionName) {
         // Directly attach to the specified session
@@ -165,8 +162,7 @@ async function main(): Promise<void> {
       break;
     }
 
-    case "k":
-    case "kill": {
+    case "k": {
       const sessions = await getTmuxSessions();
       const selected = await selectSession(sessions, "kill");
       if (selected) {
@@ -175,8 +171,7 @@ async function main(): Promise<void> {
       break;
     }
 
-    case "c":
-    case "create": {
+    case "c": {
       let sessionName = args[1];
       if (!sessionName) {
         sessionName = await input({

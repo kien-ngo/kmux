@@ -28,11 +28,12 @@ npm link
 ## Usage
 
 ```bash
-kmux ls         List sessions and select one to attach
-kmux a          Attach to a session (interactive)
-kmux c [name]   Create a new session (optional name)
-kmux k          Kill a session (interactive)
-kmux help       Show this help message
+kmux ls            [l]ist sessions and select one to attach
+kmux a             [a]ttach to a session (interactive)
+kmux a [name]      [a]ttach to a specific session by name
+kmux c [name]      [c]reate a new session (optional name)
+kmux k             [k]ill a session (interactive)
+kmux help          Show this help message
 ```
 
 Use arrow keys to navigate the menu and Enter to select.
