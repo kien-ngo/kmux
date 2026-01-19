@@ -1,6 +1,6 @@
 {
   "name": "kmux",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A friendly tmux session navigator with interactive menus",
   "module": "index.ts",
   "type": "module",
