@@ -43,8 +43,8 @@ async function getTmuxSessions(): Promise<TmuxSession[]> {
       return {
         name: name ?? "",
         windows: parseInt(windows ?? "0", 10),
-        created: createdTimestamp > 0 
-          ? new Date(createdTimestamp * 1000).toLocaleString() 
+        created: createdTimestamp > 0
+          ? new Date(createdTimestamp * 1000).toLocaleString()
           : "Unknown",
         attached: attached === "1",
       };
@@ -100,9 +100,8 @@ async function selectSession(
     const selected = await select({
       message: `Select a session to ${actionText}:`,
       choices: sessions.map((s) => ({
-        name: `${s.name} (${s.windows} window${s.windows !== 1 ? "s" : ""})${
-          s.attached ? " [attached]" : ""
-        }`,
+        name: `${s.name} (${s.windows} window${s.windows !== 1 ? "s" : ""})${s.attached ? " [attached]" : ""
+          }`,
         value: s.name,
         description: `Created: ${s.created}`,
       })),
@@ -110,8 +109,8 @@ async function selectSession(
         prefix: pc.green(">"),
         icon: { cursor: ">" },
         style: {
-          highlight: (text) => pc.green(pc.bold(text)), // Bold green for better visibility
-          description: (text) => pc.cyan(text),
+          highlight: (text: string) => pc.green(pc.bold(text)), // Bold green for better visibility
+          description: (text: string) => pc.cyan(text),
           keysHelpTip: () => "", // Hide help legend
         },
       },
