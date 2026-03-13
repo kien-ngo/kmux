@@ -1,6 +1,6 @@
 {
   "name": "kmux",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "A friendly tmux session navigator with interactive menus",
   "module": "index.ts",
   "type": "module",
@@ -8,7 +8,7 @@
     "kmux": "./dist/index.js"
   },
   "scripts": {
-    "compile": "bun build ./index.ts --outdir ./dist --target node --minify",
+    "compile": "bun build ./index.ts --outdir ./dist --target bun --minify",
     "dev": "bun run index.ts"
   },
   "files": [
@@ -33,7 +33,8 @@
   },
   "homepage": "https://github.com/kien-ngo/kmux#readme",
   "dependencies": {
-    "@inquirer/prompts": "^7.0.0"
+    "@inquirer/prompts": "^8.3.0",
+    "picocolors": "^1.1.1"
   },
   "devDependencies": {
     "@types/bun": "latest"

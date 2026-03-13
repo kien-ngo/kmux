@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import { input, select } from "@inquirer/prompts";
+import { select, input } from "@inquirer/prompts";
+import pc from "picocolors";
 import { $ } from "bun";
 
 interface TmuxSession {
@@ -9,9 +10,19 @@ interface TmuxSession {
   attached: boolean;
 }
 
+const log = {
+  success: (msg: string) => console.log(`${pc.green("*")} ${msg}`),
+  error: (msg: string) => console.log(`${pc.red("!")} ${msg}`),
+  warn: (msg: string) => console.log(`${pc.yellow("!")} ${msg}`),
+  info: (msg: string) => console.log(`${pc.blue("i")} ${msg}`),
+};
+
+const intro = (msg: string) => console.log(pc.cyan(`\n${msg}\n`));
+const outro = (msg: string) => console.log(pc.cyan(`\n${msg}\n`));
+
 async function checkTmuxInstalled(): Promise<boolean> {
   try {
-    await $`which tmux`.quiet();
+    await $`tmux -V`.quiet();
     return true;
   } catch {
     return false;
@@ -28,10 +39,13 @@ async function getTmuxSessions(): Promise<TmuxSession[]> {
 
     return output.split("\n").map((line) => {
       const [name, windows, created, attached] = line.split("|");
+      const createdTimestamp = parseInt(created ?? "0", 10);
       return {
         name: name ?? "",
         windows: parseInt(windows ?? "0", 10),
-        created: new Date(parseInt(created ?? "0", 10) * 1000).toLocaleString(),
+        created: createdTimestamp > 0 
+          ? new Date(createdTimestamp * 1000).toLocaleString() 
+          : "Unknown",
         attached: attached === "1",
       };
     });
@@ -52,9 +66,9 @@ async function attachSession(sessionName: string): Promise<void> {
 async function killSession(sessionName: string): Promise<void> {
   try {
     await $`tmux kill-session -t ${sessionName}`.quiet();
-    console.log(`Killed session: ${sessionName}`);
+    log.success(`Killed session: ${sessionName}`);
   } catch (error) {
-    console.error(`Failed to kill session: ${sessionName}`);
+    log.error(`Failed to kill session: ${sessionName}`);
   }
 }
 
@@ -76,24 +90,37 @@ async function selectSession(
   action: "attach" | "kill"
 ): Promise<string | null> {
   if (sessions.length === 0) {
-    console.log("No tmux sessions found.");
+    log.warn("No tmux sessions found.");
     return null;
   }
 
   const actionText = action === "attach" ? "attach to" : "kill";
 
-  const answer = await select({
-    message: `Select a session to ${actionText}:`,
-    choices: sessions.map((s) => ({
-      name: `${s.name} (${s.windows} window${s.windows !== 1 ? "s" : ""})${
-        s.attached ? " [attached]" : ""
-      }`,
-      value: s.name,
-      description: `Created: ${s.created}`,
-    })),
-  });
+  try {
+    const selected = await select({
+      message: `Select a session to ${actionText}:`,
+      choices: sessions.map((s) => ({
+        name: `${s.name} (${s.windows} window${s.windows !== 1 ? "s" : ""})${
+          s.attached ? " [attached]" : ""
+        }`,
+        value: s.name,
+        description: `Created: ${s.created}`,
+      })),
+      theme: {
+        prefix: pc.green(">"),
+        icon: { cursor: ">" },
+        style: {
+          highlight: (text) => pc.green(pc.bold(text)), // Bold green for better visibility
+          description: (text) => pc.cyan(text),
+          keysHelpTip: () => "", // Hide help legend
+        },
+      },
+    });
 
-  return answer;
+    return selected;
+  } catch (error) {
+    return null;
+  }
 }
 
 const pkgName = "kmux";
@@ -119,7 +146,6 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
 
-  // Handle help commands first (no tmux required)
   if (
     !command ||
     command === "help" ||
@@ -130,18 +156,22 @@ async function main(): Promise<void> {
     return;
   }
 
-  // All other commands require tmux
   if (!(await checkTmuxInstalled())) {
-    console.error("Error: tmux is not installed. Please install tmux first.");
+    log.error("Error: tmux is not installed. Please install tmux first.");
     process.exit(1);
   }
 
   switch (command) {
-    case "ls": {
+    case "ls":
+    case "l": {
+      intro(`${pkgName} - List sessions`);
       const sessions = await getTmuxSessions();
       const selected = await selectSession(sessions, "attach");
       if (selected) {
+        outro(`Attaching to session: ${selected}`);
         await attachSession(selected);
+      } else {
+        outro("Cancelled.");
       }
       break;
     }
@@ -149,24 +179,30 @@ async function main(): Promise<void> {
     case "a": {
       const sessionName = args[1];
       if (sessionName) {
-        // Directly attach to the specified session
         await attachSession(sessionName);
       } else {
-        // Interactive selection if no session name provided
+        intro(`${pkgName} - Attach to session`);
         const sessions = await getTmuxSessions();
         const selected = await selectSession(sessions, "attach");
         if (selected) {
+          outro(`Attaching to session: ${selected}`);
           await attachSession(selected);
+        } else {
+          outro("Cancelled.");
         }
       }
       break;
     }
 
     case "k": {
+      intro(`${pkgName} - Kill session`);
       const sessions = await getTmuxSessions();
       const selected = await selectSession(sessions, "kill");
       if (selected) {
         await killSession(selected);
+        outro("Done.");
+      } else {
+        outro("Cancelled.");
       }
       break;
     }
@@ -174,9 +210,21 @@ async function main(): Promise<void> {
     case "c": {
       let sessionName = args[1];
       if (!sessionName) {
-        sessionName = await input({
-          message: "Session name (leave empty for default):",
-        });
+        intro(`${pkgName} - Create session`);
+        try {
+          const name = await input({
+            message: "Session name (leave empty for default):",
+            default: "",
+            theme: {
+              prefix: pc.green(">"),
+            }
+          });
+          sessionName = name as string;
+          outro(`Creating session: ${sessionName || "default"}`);
+        } catch (error) {
+          outro("Cancelled.");
+          return;
+        }
       }
       await createSession(sessionName || undefined);
       break;
@@ -190,9 +238,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  if (error.message?.includes("User force closed")) {
-    process.exit(0);
-  }
+  log.error("An unexpected error occurred.");
   console.error(error);
   process.exit(1);
 });
